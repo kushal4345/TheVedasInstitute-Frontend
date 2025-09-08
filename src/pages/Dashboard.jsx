@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [typingMessage, setTypingMessage] = useState('');
   const fileInputRef = useRef(null);
   const ragFileInputRef = useRef(null);
 
@@ -32,6 +33,33 @@ const Dashboard = () => {
   // Generate a unique session ID
   const generateSessionId = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // Simulate typing animation for AI responses
+  const simulateTyping = (message, callback) => {
+    let index = 0;
+    setTypingMessage('');
+    
+    const typeInterval = setInterval(() => {
+      if (index < message.length) {
+        setTypingMessage(message.substring(0, index + 1));
+        index++;
+      } else {
+        clearInterval(typeInterval);
+        callback();
+      }
+    }, 20); // Adjust speed as needed
+  };
+
+  // Copy text to clipboard
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here
+      console.log('Text copied to clipboard');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   const handleLogout = async () => {
@@ -94,8 +122,19 @@ const Dashboard = () => {
             {
               id: 1,
               type: 'ai',
-              message: `Welcome! I've successfully uploaded "${file.name}". The document has been processed and vectorized. You can now ask me questions about this document. What would you like to know?`,
-              timestamp: new Date().toLocaleString()
+              message: `🎉 Welcome! I've successfully uploaded "${file.name}". 
+
+The document has been processed and vectorized, and I'm ready to help you explore its contents. 
+
+Here are some things you can ask me:
+• Summarize the main topics
+• Explain specific concepts
+• Find information about particular subjects
+• Answer questions about the content
+
+What would you like to know about this document?`,
+              timestamp: new Date().toLocaleString(),
+              isTyping: false
             }
           ]);
         } else {
@@ -212,13 +251,30 @@ const Dashboard = () => {
         
         const result = await response.json();
         console.log('Chat response:', result);
+        
+        const aiMessage = result.response || result.message || result.answer || 'I received your message but couldn\'t generate a response.';
+        
+        // Add AI response with typing animation
         const aiResponse = {
           id: Date.now() + 1,
           type: 'ai',
-          message: result.response || result.message || result.answer || 'I received your message but couldn\'t generate a response.',
-          timestamp: new Date().toLocaleString()
+          message: aiMessage,
+          timestamp: new Date().toLocaleString(),
+          isTyping: true
         };
+        
         setChatMessages(prev => [...prev, aiResponse]);
+        
+        // Simulate typing animation
+        simulateTyping(aiMessage, () => {
+          setChatMessages(prev => 
+            prev.map(msg => 
+              msg.id === aiResponse.id 
+                ? { ...msg, isTyping: false }
+                : msg
+            )
+          );
+        });
       } catch (error) {
         console.error('Chat error:', error);
         let errorMessage = 'Sorry, I encountered an error while processing your request. Please try again.';
@@ -806,32 +862,84 @@ const Dashboard = () => {
                         <div className={`max-w-3xl ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                           <div className={`flex items-start space-x-3 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                             {/* Avatar */}
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
                               message.type === 'user' 
                                 ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
                                 : 'bg-gradient-to-br from-purple-500 to-pink-600'
                             }`}>
                               {message.type === 'user' ? (
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                               ) : (
-                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                </svg>
+                                <div className="relative">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                  </svg>
+                                  {/* AI Indicator */}
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                                </div>
                               )}
                             </div>
                             
                             {/* Message Bubble */}
-                            <div className={`px-6 py-4 rounded-2xl shadow-lg ${
+                            <div className={`px-6 py-4 rounded-2xl shadow-lg relative group ${
                               message.type === 'user'
                                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
                                 : darkMode 
                                   ? 'bg-gray-700 text-white' 
-                                  : 'bg-gray-100 text-gray-800'
+                                  : 'bg-gradient-to-br from-purple-50 to-pink-50 text-gray-800 border border-purple-200'
                             }`}>
-                              <p className="text-sm leading-relaxed">{message.message}</p>
-                              <p className={`text-xs mt-2 ${
+                              {/* AI Response Content */}
+                              {message.type === 'ai' ? (
+                                <div className="space-y-3">
+                                  {/* AI Response Text */}
+                                  <div className="prose prose-sm max-w-none">
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                                      {message.isTyping ? typingMessage : message.message}
+                                      {message.isTyping && (
+                                        <span className="inline-block w-2 h-4 bg-purple-500 ml-1 animate-pulse"></span>
+                                      )}
+                                    </p>
+                                  </div>
+                                  
+                                  {/* Action Buttons */}
+                                  {!message.isTyping && (
+                                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      <button
+                                        onClick={() => copyToClipboard(message.message)}
+                                        className="flex items-center space-x-1 px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-xs font-medium transition-colors duration-200"
+                                      >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                        <span>Copy</span>
+                                      </button>
+                                      
+                                      <button
+                                        onClick={() => {
+                                          const newMessage = `Can you elaborate on: "${message.message.substring(0, 50)}..."`;
+                                          setCurrentMessage(newMessage);
+                                        }}
+                                        className="flex items-center space-x-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-colors duration-200"
+                                      >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                        </svg>
+                                        <span>Follow-up</span>
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                /* User Message Content */
+                                <div>
+                                  <p className="text-sm leading-relaxed">{message.message}</p>
+                                </div>
+                              )}
+                              
+                              {/* Timestamp */}
+                              <p className={`text-xs mt-3 ${
                                 message.type === 'user' ? 'text-blue-100' : darkMode ? 'text-gray-400' : 'text-gray-500'
                               }`}>
                                 {message.timestamp}
