@@ -55,7 +55,7 @@ const Dashboard = () => {
         clearInterval(typeInterval);
         callback();
       }
-    }, 20); // Adjust speed as needed
+    }, 1); // Ultra fast typing speed - maximum possible speed
   };
 
   // Copy text to clipboard
@@ -67,6 +67,119 @@ const Dashboard = () => {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  // Function to render formatted message with decorative headings and beautiful typography
+  const renderFormattedMessage = (message) => {
+    if (!message) return '';
+    
+    // Split message into lines and process each line
+    const lines = message.split('\n');
+    
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+      
+      // Universal heading detection - ANY text containing ** is a heading
+      if (trimmedLine.includes('**')) {
+        // Remove all ** markers and clean up the text
+        const headingText = trimmedLine.replace(/\*\*/g, '').trim();
+        
+        // Determine heading level based on content
+        const isMainHeading = headingText.includes(':') || headingText.length > 20;
+        const headingSize = isMainHeading ? 'text-lg' : 'text-base';
+        const headingWeight = isMainHeading ? 'font-semibold' : 'font-medium';
+        
+        return (
+          <div key={index} className="my-5">
+            <h2 className={`${headingSize} ${headingWeight} leading-6 ${
+              darkMode ? 'text-gray-200' : 'text-gray-800'
+            } mb-3`} style={{
+              fontFeatureSettings: '"liga" 1, "kern" 1',
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale',
+              letterSpacing: '-0.01em'
+            }}>
+              {headingText}
+            </h2>
+          </div>
+        );
+      }
+      
+      // Check for bullet points (lines starting with - or •)
+      if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
+        const bulletText = trimmedLine.substring(1).trim();
+        return (
+          <div key={index} className="flex items-start space-x-3 my-2">
+            <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${
+              darkMode ? 'bg-gray-400' : 'bg-gray-600'
+            }`}></div>
+            <span className={`text-sm leading-7 font-normal ${
+              darkMode ? 'text-gray-200' : 'text-gray-800'
+            }`} style={{
+              fontFeatureSettings: '"liga" 1, "kern" 1',
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
+            }}>
+              {bulletText}
+            </span>
+          </div>
+        );
+      }
+      
+      // Check for numbered lists (lines starting with numbers)
+      if (/^\d+\./.test(trimmedLine)) {
+        const parts = trimmedLine.split('.');
+        const number = parts[0];
+        const text = parts.slice(1).join('.').trim();
+        return (
+          <div key={index} className="flex items-start space-x-3 my-2">
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5 ${
+              darkMode 
+                ? 'bg-gray-700 text-gray-300' 
+                : 'bg-gray-200 text-gray-700'
+            }`} style={{
+              fontFeatureSettings: '"liga" 1, "kern" 1',
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
+            }}>
+              {number}
+            </div>
+            <span className={`text-sm leading-7 font-normal ${
+              darkMode ? 'text-gray-200' : 'text-gray-800'
+            }`} style={{
+              fontFeatureSettings: '"liga" 1, "kern" 1',
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
+            }}>
+              {text}
+            </span>
+          </div>
+        );
+      }
+      
+      // Regular text lines with Claude's amazing typography
+      if (trimmedLine) {
+        return (
+          <p key={index} className={`text-sm leading-7 font-normal my-2 ${
+            darkMode ? 'text-gray-200' : 'text-gray-800'
+          }`} style={{
+            fontFeatureSettings: '"liga" 1, "kern" 1',
+            textRendering: 'optimizeLegibility',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale'
+          }}>
+            {line}
+          </p>
+        );
+      }
+      
+      // Empty lines with proper spacing
+      return <div key={index} className="h-3"></div>;
+    });
   };
 
   // Chat Session Management Functions
@@ -193,14 +306,14 @@ const Dashboard = () => {
           const result = await response.json();
           setSessionId(newSessionId);
           const uploadedFileData = {
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            uploadDate: new Date().toLocaleString()
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          uploadDate: new Date().toLocaleString()
           };
           setUploadedFile(uploadedFileData);
-          
-          // Add welcome message
+        
+        // Add welcome message
           const welcomeMessage = {
             id: 1,
             type: 'ai',
@@ -255,7 +368,7 @@ What would you like to know about this document?`,
       const newMessage = {
         id: Date.now(),
         type: 'user',
-        message: currentMessage,  
+        message: currentMessage,
         timestamp: new Date().toLocaleString()
       };
       
@@ -603,17 +716,17 @@ What would you like to know about this document?`,
                     </div>
                   </div>
                   
-            <Button 
+                  <Button 
               onClick={startNewChat}
-              className="w-full mt-6 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg border border-white/20 hover:border-white/40"
-            >
-              <span className="flex items-center justify-center space-x-2">
+                    className="w-full mt-6 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg border border-white/20 hover:border-white/40"
+                  >
+                    <span className="flex items-center justify-center space-x-2">
                 <span>Upload New Document</span>
-                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-            </Button>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                      </svg>
+                    </span>
+                  </Button>
                 </div>
               </div>
 
@@ -837,15 +950,15 @@ What would you like to know about this document?`,
                     Upload New Document
                   </Button>
                 )}
-                <Button 
-                  onClick={handleBackToDashboard}
-                  className={`bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
-                >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  Back to Dashboard
-                </Button>
+              <Button 
+                onClick={handleBackToDashboard}
+                className={`bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Dashboard
+              </Button>
               </div>
             </div>
             
@@ -972,12 +1085,21 @@ What would you like to know about this document?`,
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                 </svg>
                               ) : (
-                                <div className="relative">
-                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                  </svg>
-                                  {/* AI Indicator */}
-                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+                                <div className="relative w-full h-full">
+                                  {/* Outer glow ring */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 rounded-full animate-spin opacity-60" style={{animationDuration: '3s'}}></div>
+                                  {/* Middle ring */}
+                                  <div className="absolute inset-1 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-full animate-pulse"></div>
+                                  {/* Inner core */}
+                                  <div className="absolute inset-2 bg-gradient-to-br from-white to-purple-100 rounded-full flex items-center justify-center">
+                                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                                  </div>
+                                  {/* Floating particles */}
+                                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping opacity-60"></div>
+                                  <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-green-400 rounded-full animate-ping opacity-60" style={{animationDelay: '0.5s'}}></div>
+                                  <div className="absolute top-0 left-0 w-1.5 h-1.5 bg-blue-400 rounded-full animate-ping opacity-60" style={{animationDelay: '1s'}}></div>
                                 </div>
                               )}
                             </div>
@@ -985,56 +1107,133 @@ What would you like to know about this document?`,
                             {/* Message Bubble */}
                             <div className={`px-6 py-4 rounded-2xl shadow-lg relative group ${
                               message.type === 'user'
-                                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white'
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white'
                                 : darkMode 
-                                  ? 'bg-gray-700 text-white' 
-                                  : 'bg-gradient-to-br from-purple-50 to-pink-50 text-gray-800 border border-purple-200'
+                                  ? 'bg-gradient-to-br from-gray-800/95 via-gray-900/95 to-black/95 text-gray-100 backdrop-blur-xl border border-gray-700/30' 
+                                  : 'bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95 text-gray-900 backdrop-blur-xl border border-gray-200/30'
                             }`}>
-                              {/* AI Response Content */}
+                              {/* AI Response Content - Stunning Design */}
                               {message.type === 'ai' ? (
-                                <div className="space-y-3">
-                                  {/* AI Response Text */}
-                                  <div className="prose prose-sm max-w-none">
-                                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                                      {message.isTyping ? typingMessage : message.message}
-                                      {message.isTyping && (
-                                        <span className="inline-block w-2 h-4 bg-purple-500 ml-1 animate-pulse"></span>
-                                      )}
-                                    </p>
+                                <div className="space-y-4 relative">
+                                  {/* Clean Background - Claude Style */}
+                                  <div className="absolute inset-0 opacity-3">
+                                    <div className={`absolute top-0 left-0 w-full h-full animate-pulse ${
+                                      darkMode 
+                                        ? 'bg-gradient-to-r from-gray-700/20 via-gray-800/20 to-gray-900/20' 
+                                        : 'bg-gradient-to-r from-gray-100/20 via-gray-50/20 to-white/20'
+                                    }`}></div>
                                   </div>
                                   
-                                  {/* Action Buttons */}
-                                  {!message.isTyping && (
-                                    <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                      <button
-                                        onClick={() => copyToClipboard(message.message)}
-                                        className="flex items-center space-x-1 px-3 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-xs font-medium transition-colors duration-200"
-                                      >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                        </svg>
-                                        <span>Copy</span>
-                                      </button>
-                                      
-                                      <button
-                                        onClick={() => {
-                                          const newMessage = `Can you elaborate on: "${message.message.substring(0, 50)}..."`;
-                                          setCurrentMessage(newMessage);
-                                        }}
-                                        className="flex items-center space-x-1 px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg text-xs font-medium transition-colors duration-200"
-                                      >
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                        </svg>
-                                        <span>Follow-up</span>
-                                      </button>
+                                  {/* Claude-style Header */}
+                                  <div className="flex items-center justify-between relative z-10">
+                                    <div className="flex items-center space-x-3">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        darkMode ? 'bg-gray-400' : 'bg-gray-600'
+                                      }`}></div>
+                                      <span className={`text-sm font-medium ${
+                                        darkMode ? 'text-gray-300' : 'text-gray-600'
+                                      }`} style={{
+                                        fontFeatureSettings: '"liga" 1, "kern" 1',
+                                        textRendering: 'optimizeLegibility',
+                                        WebkitFontSmoothing: 'antialiased',
+                                        MozOsxFontSmoothing: 'grayscale'
+                                      }}>
+                                        AI Assistant
+                                      </span>
                                     </div>
-                                  )}
+                                    
+                                    {/* Action buttons with hover effects */}
+                                    {!message.isTyping && (
+                                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
+                                        <button
+                                          onClick={() => copyToClipboard(message.message)}
+                                          className={`p-2 rounded-lg transition-all duration-200 hover:bg-opacity-80 ${
+                                            darkMode 
+                                              ? 'bg-gray-700/50 hover:bg-gray-700/70' 
+                                              : 'bg-gray-200/50 hover:bg-gray-200/70'
+                                          }`}
+                                          title="Copy response"
+                                        >
+                                          <svg className={`w-4 h-4 ${
+                                            darkMode ? 'text-gray-400' : 'text-gray-600'
+                                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            const newMessage = `Can you elaborate on: "${message.message.substring(0, 50)}..."`;
+                                            setCurrentMessage(newMessage);
+                                          }}
+                                          className={`p-2 rounded-lg transition-all duration-200 hover:bg-opacity-80 ${
+                                            darkMode 
+                                              ? 'bg-gray-700/50 hover:bg-gray-700/70' 
+                                              : 'bg-gray-200/50 hover:bg-gray-200/70'
+                                          }`}
+                                          title="Ask follow-up"
+                                        >
+                                          <svg className={`w-4 h-4 ${
+                                            darkMode ? 'text-gray-400' : 'text-gray-600'
+                                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Message content with Claude's amazing typography */}
+                                  <div className={`leading-7 relative z-10 font-sans antialiased ${
+                                    darkMode ? 'text-gray-100' : 'text-gray-900'
+                                  }`} style={{
+                                    fontFeatureSettings: '"liga" 1, "kern" 1',
+                                    textRendering: 'optimizeLegibility',
+                                    WebkitFontSmoothing: 'antialiased',
+                                    MozOsxFontSmoothing: 'grayscale'
+                                  }}>
+                                    {message.isTyping ? (
+                                      <div className="flex items-center space-x-2">
+                                        <span className={`text-sm font-medium ${
+                                          darkMode ? 'text-gray-400' : 'text-gray-600'
+                                        }`}>
+                                          {typingMessage}
+                                        </span>
+                                        <div className="flex space-x-1">
+                                          <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                            darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                          }`}></div>
+                                          <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                            darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                          }`} style={{animationDelay: '0.1s'}}></div>
+                                          <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                            darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                          }`} style={{animationDelay: '0.2s'}}></div>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className={`text-sm leading-7 font-normal ${
+                                        darkMode ? 'text-gray-100' : 'text-gray-900'
+                                      }`} style={{
+                                        fontFeatureSettings: '"liga" 1, "kern" 1',
+                                        textRendering: 'optimizeLegibility',
+                                        WebkitFontSmoothing: 'antialiased',
+                                        MozOsxFontSmoothing: 'grayscale'
+                                      }}>
+                                        {renderFormattedMessage(message.message)}
+                                      </div>
+                                    )}
+                                  </div>
+                                  
                                 </div>
                               ) : (
                                 /* User Message Content */
                                 <div>
-                                  <p className="text-sm leading-relaxed">{message.message}</p>
+                              <p className="text-sm leading-7 font-normal" style={{
+                                fontFeatureSettings: '"liga" 1, "kern" 1',
+                                textRendering: 'optimizeLegibility',
+                                WebkitFontSmoothing: 'antialiased',
+                                MozOsxFontSmoothing: 'grayscale'
+                              }}>{message.message}</p>
                                 </div>
                               )}
                               
@@ -1055,27 +1254,85 @@ What would you like to know about this document?`,
                       <div className="flex justify-start">
                         <div className="max-w-3xl">
                           <div className="flex items-start space-x-3">
-                            {/* AI Avatar */}
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-600">
-                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                              </svg>
+                            {/* AI Avatar - Stunning Loading Design */}
+                            <div className="w-12 h-12 relative flex-shrink-0">
+                              {/* Outer glow ring */}
+                              <div className={`absolute inset-0 rounded-full animate-spin opacity-60 ${
+                                darkMode 
+                                  ? 'bg-gradient-to-r from-gray-300 via-white to-gray-200' 
+                                  : 'bg-gradient-to-r from-gray-600 via-black to-gray-700'
+                              }`} style={{animationDuration: '2s'}}></div>
+                              {/* Middle ring */}
+                              <div className={`absolute inset-1 rounded-full animate-pulse ${
+                                darkMode 
+                                  ? 'bg-gradient-to-br from-gray-200 via-white to-gray-100' 
+                                  : 'bg-gradient-to-br from-gray-700 via-black to-gray-800'
+                              }`}></div>
+                              {/* Inner core */}
+                              <div className={`absolute inset-2 rounded-full flex items-center justify-center ${
+                                darkMode 
+                                  ? 'bg-gradient-to-br from-gray-100 to-white' 
+                                  : 'bg-gradient-to-br from-gray-800 to-black'
+                              }`}>
+                                <svg className={`w-5 h-5 animate-bounce ${
+                                  darkMode ? 'text-gray-700' : 'text-gray-300'
+                                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                </svg>
+                              </div>
+                              {/* Floating particles */}
+                              <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full animate-ping opacity-60 ${
+                                darkMode ? 'bg-gray-400' : 'bg-gray-500'
+                              }`}></div>
+                              <div className={`absolute -bottom-1 -left-1 w-2 h-2 rounded-full animate-ping opacity-60 ${
+                                darkMode ? 'bg-gray-500' : 'bg-gray-600'
+                              }`} style={{animationDelay: '0.5s'}}></div>
                             </div>
                             
-                            {/* Loading Bubble */}
-                            <div className={`px-6 py-4 rounded-2xl shadow-lg ${
+                            {/* Loading Bubble - Claude Style */}
+                            <div className={`px-6 py-4 rounded-2xl shadow-lg relative overflow-hidden ${
                               darkMode 
-                                ? 'bg-gray-700 text-white' 
-                                : 'bg-gray-100 text-gray-800'
+                                ? 'bg-gradient-to-br from-gray-800/95 via-gray-900/95 to-black/95 text-gray-100 backdrop-blur-xl border border-gray-700/30' 
+                                : 'bg-gradient-to-br from-white/95 via-gray-50/95 to-gray-100/95 text-gray-900 backdrop-blur-xl border border-gray-200/30'
                             }`}>
-                              <div className="flex items-center space-x-2">
-                                <div className="flex space-x-1">
-                                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
-                                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                                </div>
-                                <span className="text-sm">AI is thinking...</span>
+                              {/* Clean Background - Claude Style */}
+                              <div className="absolute inset-0 opacity-3">
+                                <div className={`absolute top-0 left-0 w-full h-full animate-pulse ${
+                                  darkMode 
+                                    ? 'bg-gradient-to-r from-gray-700/20 via-gray-800/20 to-gray-900/20' 
+                                    : 'bg-gradient-to-r from-gray-100/20 via-gray-50/20 to-white/20'
+                                }`}></div>
                               </div>
+                              
+                              <div className="flex items-center space-x-3 relative z-10">
+                                <div className="flex items-center space-x-2">
+                                  <div className={`w-2 h-2 rounded-full ${
+                                    darkMode ? 'bg-gray-400' : 'bg-gray-600'
+                                  }`}></div>
+                                  <span className={`text-sm font-medium ${
+                                    darkMode ? 'text-gray-300' : 'text-gray-600'
+                                  }`} style={{
+                                    fontFeatureSettings: '"liga" 1, "kern" 1',
+                                    textRendering: 'optimizeLegibility',
+                                    WebkitFontSmoothing: 'antialiased',
+                                    MozOsxFontSmoothing: 'grayscale'
+                                  }}>
+                                    AI is thinking...
+                                  </span>
+                                </div>
+                                <div className="flex space-x-1">
+                                  <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                    darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                  }`}></div>
+                                  <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                    darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                  }`} style={{animationDelay: '0.1s'}}></div>
+                                  <div className={`w-1 h-1 rounded-full animate-bounce ${
+                                    darkMode ? 'bg-gray-500' : 'bg-gray-400'
+                                  }`} style={{animationDelay: '0.2s'}}></div>
+                                </div>
+                              </div>
+                              
                             </div>
                           </div>
                         </div>
@@ -1112,9 +1369,9 @@ What would you like to know about this document?`,
                         {isChatLoading ? (
                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                          </svg>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
                         )}
                       </Button>
                     </div>
