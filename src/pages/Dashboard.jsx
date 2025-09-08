@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [typingMessage, setTypingMessage] = useState('');
+  const [chatSessions, setChatSessions] = useState([]);
+  const [showSessionList, setShowSessionList] = useState(false);
   const fileInputRef = useRef(null);
   const ragFileInputRef = useRef(null);
 
@@ -28,6 +30,11 @@ const Dashboard = () => {
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Load chat sessions on component mount
+  useEffect(() => {
+    loadChatSessions();
   }, []);
 
   // Generate a unique session ID
@@ -62,6 +69,78 @@ const Dashboard = () => {
     }
   };
 
+  // Chat Session Management Functions
+  const saveChatSession = (sessionData) => {
+    try {
+      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const existingIndex = sessions.findIndex(s => s.sessionId === sessionData.sessionId);
+      
+      if (existingIndex >= 0) {
+        sessions[existingIndex] = sessionData;
+      } else {
+        sessions.push(sessionData);
+      }
+      
+      // Sort by last updated (most recent first)
+      sessions.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+      
+      localStorage.setItem('vedasChatSessions', JSON.stringify(sessions));
+      setChatSessions(sessions);
+    } catch (error) {
+      console.error('Failed to save chat session:', error);
+    }
+  };
+
+  const loadChatSessions = () => {
+    try {
+      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      setChatSessions(sessions);
+      return sessions;
+    } catch (error) {
+      console.error('Failed to load chat sessions:', error);
+      return [];
+    }
+  };
+
+  const loadChatSession = (sessionIdToLoad) => {
+    try {
+      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const session = sessions.find(s => s.sessionId === sessionIdToLoad);
+      
+      if (session) {
+        setSessionId(session.sessionId);
+        setUploadedFile(session.uploadedFile);
+        setChatMessages(session.chatMessages);
+        setActiveSection('rag');
+        setShowSessionList(false); // Close the session list
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to load chat session:', error);
+      return false;
+    }
+  };
+
+  const deleteChatSession = (sessionIdToDelete) => {
+    try {
+      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const filteredSessions = sessions.filter(s => s.sessionId !== sessionIdToDelete);
+      localStorage.setItem('vedasChatSessions', JSON.stringify(filteredSessions));
+      setChatSessions(filteredSessions);
+      
+      // If we're deleting the current session, reset to main dashboard
+      if (sessionIdToDelete === sessionId) {
+        setActiveSection('main');
+        setSessionId(null);
+        setUploadedFile(null);
+        setChatMessages([]);
+      }
+    } catch (error) {
+      console.error('Failed to delete chat session:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -87,7 +166,11 @@ const Dashboard = () => {
       setIsUploading(true);
       
       try {
+        // Generate sessionId BEFORE making the API call
+        const newSessionId = generateSessionId();
+        
         const formData = new FormData();
+        formData.append('session_id', newSessionId);
         formData.append('file', file);
         
         // Try proxy first, then fallback to direct URL
@@ -108,21 +191,20 @@ const Dashboard = () => {
         
         if (response.ok) {
           const result = await response.json();
-          const newSessionId = generateSessionId();
           setSessionId(newSessionId);
-          setUploadedFile({
+          const uploadedFileData = {
             name: file.name,
             size: file.size,
             type: file.type,
             uploadDate: new Date().toLocaleString()
-          });
+          };
+          setUploadedFile(uploadedFileData);
           
           // Add welcome message
-          setChatMessages([
-            {
-              id: 1,
-              type: 'ai',
-              message: `🎉 Welcome! I've successfully uploaded "${file.name}". 
+          const welcomeMessage = {
+            id: 1,
+            type: 'ai',
+            message: `🎉 Welcome! I've successfully uploaded "${file.name}". 
 
 The document has been processed and vectorized, and I'm ready to help you explore its contents. 
 
@@ -133,10 +215,23 @@ Here are some things you can ask me:
 • Answer questions about the content
 
 What would you like to know about this document?`,
-              timestamp: new Date().toLocaleString(),
-              isTyping: false
-            }
-          ]);
+            timestamp: new Date().toLocaleString(),
+            isTyping: false
+          };
+          
+          setChatMessages([welcomeMessage]);
+          
+          // Save the session to localStorage
+          const sessionData = {
+            sessionId: newSessionId,
+            uploadedFile: uploadedFileData,
+            chatMessages: [welcomeMessage],
+            createdAt: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+            title: file.name
+          };
+          
+          saveChatSession(sessionData);
         } else {
           throw new Error(`Upload failed with status: ${response.status}`);
         }
@@ -170,83 +265,40 @@ What would you like to know about this document?`,
       setIsChatLoading(true);
       
       try {
-        // Try different request formats
-        const requestFormats = [
-          {
-            query: userMessage,
-            filename: uploadedFile.name,
-            session_id: sessionId,
-            chat_history: chatMessages.map(msg => ({
-              role: msg.type === 'user' ? 'user' : 'assistant',
-              content: msg.message
-            }))
-          },
-          {
-            message: userMessage,
-            filename: uploadedFile.name,
-            session_id: sessionId
-          },
-          {
-            question: userMessage,
-            filename: uploadedFile.name,
-            session_id: sessionId
-          }
-        ];
+        // Create the correct request body as expected by the backend
+        const requestBody = {
+          session_id: sessionId,
+          query: userMessage
+        };
         
+        console.log('Sending chat request:', requestBody);
+        
+        // Try proxy first, then fallback to direct URL
         let response;
-        let lastError;
-        
-        // Try each format until one works
-        for (let i = 0; i < requestFormats.length; i++) {
-          const requestBody = requestFormats[i];
-          console.log(`Trying request format ${i + 1}:`, requestBody);
-          
-          try {
-            response = await fetch('/vedas-api/chat/', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(requestBody),
-            });
-            
-            if (response.ok) {
-              console.log(`Format ${i + 1} succeeded!`);
-              break;
-            } else {
-              const errorText = await response.text();
-              console.log(`Format ${i + 1} failed with status ${response.status}:`, errorText);
-              lastError = new Error(`Status ${response.status}: ${errorText}`);
-            }
-          } catch (proxyError) {
-            console.warn(`Format ${i + 1} proxy failed, trying direct URL:`, proxyError);
-            try {
-              response = await fetch('https://vedas-chat-1.onrender.com/chat/', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
-                mode: 'cors',
-              });
-              
-              if (response.ok) {
-                console.log(`Format ${i + 1} direct URL succeeded!`);
-                break;
-              } else {
-                const errorText = await response.text();
-                console.log(`Format ${i + 1} direct URL failed with status ${response.status}:`, errorText);
-                lastError = new Error(`Status ${response.status}: ${errorText}`);
-              }
-            } catch (directError) {
-              console.log(`Format ${i + 1} direct URL also failed:`, directError);
-              lastError = directError;
-            }
-          }
+        try {
+          response = await fetch('/vedas-api/chat/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+        } catch (proxyError) {
+          console.warn('Proxy failed, trying direct URL:', proxyError);
+          response = await fetch('https://vedas-chat-1.onrender.com/chat/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            mode: 'cors',
+          });
         }
         
-        if (!response || !response.ok) {
-          throw lastError || new Error('All request formats failed');
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('API Error Response:', errorText);
+          throw new Error(`Chat request failed with status: ${response.status} - ${errorText}`);
         }
         
         const result = await response.json();
@@ -267,13 +319,27 @@ What would you like to know about this document?`,
         
         // Simulate typing animation
         simulateTyping(aiMessage, () => {
-          setChatMessages(prev => 
-            prev.map(msg => 
+          setChatMessages(prev => {
+            const updatedMessages = prev.map(msg => 
               msg.id === aiResponse.id 
                 ? { ...msg, isTyping: false }
                 : msg
-            )
-          );
+            );
+            
+            // Save updated session to localStorage
+            const sessionData = {
+              sessionId: sessionId,
+              uploadedFile: uploadedFile,
+              chatMessages: updatedMessages,
+              createdAt: chatSessions.find(s => s.sessionId === sessionId)?.createdAt || new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+              title: uploadedFile.name
+            };
+            
+            saveChatSession(sessionData);
+            
+            return updatedMessages;
+          });
         });
       } catch (error) {
         console.error('Chat error:', error);
@@ -298,6 +364,27 @@ What would you like to know about this document?`,
 
   const handleBackToDashboard = () => {
     setActiveSection('main');
+  };
+
+  const startNewChat = () => {
+    // Save current chat to history if there's an active session
+    if (sessionId && uploadedFile && chatMessages.length > 0) {
+      const sessionData = {
+        sessionId: sessionId,
+        uploadedFile: uploadedFile,
+        chatMessages: chatMessages,
+        createdAt: chatSessions.find(s => s.sessionId === sessionId)?.createdAt || new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        title: uploadedFile.name
+      };
+      saveChatSession(sessionData);
+    }
+    
+    // Clear current session and show upload interface
+    setSessionId(null);
+    setUploadedFile(null);
+    setChatMessages([]);
+    setActiveSection('rag');
   };
 
   const renderMainContent = () => {
@@ -516,17 +603,17 @@ What would you like to know about this document?`,
                     </div>
                   </div>
                   
-                  <Button 
-                    onClick={() => setActiveSection('rag')}
-                    className="w-full mt-6 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg border border-white/20 hover:border-white/40"
-                  >
-                    <span className="flex items-center justify-center space-x-2">
-                      <span>Start Chatting</span>
-                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                      </svg>
-                    </span>
-                  </Button>
+            <Button 
+              onClick={startNewChat}
+              className="w-full mt-6 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg border border-white/20 hover:border-white/40"
+            >
+              <span className="flex items-center justify-center space-x-2">
+                <span>Upload New Document</span>
+                <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </span>
+            </Button>
                 </div>
               </div>
 
@@ -735,18 +822,31 @@ What would you like to know about this document?`,
                   AI Wisdom Chat
                 </h2>
                 <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-2`}>
-                  Upload documents and chat with ancient wisdom
+                  {uploadedFile ? `Chatting about: ${uploadedFile.name}` : 'Upload documents and chat with ancient wisdom'}
                 </p>
               </div>
-              <Button 
-                onClick={handleBackToDashboard}
-                className={`bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back to Dashboard
-              </Button>
+              <div className="flex items-center space-x-3">
+                {uploadedFile && (
+                  <Button 
+                    onClick={startNewChat}
+                    className={`bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
+                  >
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload New Document
+                  </Button>
+                )}
+                <Button 
+                  onClick={handleBackToDashboard}
+                  className={`bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Back to Dashboard
+                </Button>
+              </div>
             </div>
             
             {/* Main Chat Interface */}
@@ -756,8 +856,8 @@ What would you like to know about this document?`,
                 : 'bg-white/80 backdrop-blur-xl border-white/20'
             }`}>
               
-              {/* Upload Section */}
-              {!uploadedFile && (
+              {/* Upload Section - Show when no active session */}
+              {!uploadedFile && !sessionId && (
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center max-w-2xl mx-auto">
                     {/* Animated Upload Icon */}
@@ -825,8 +925,8 @@ What would you like to know about this document?`,
                 </div>
               )}
               
-              {/* Chat Interface */}
-              {uploadedFile && (
+              {/* Chat Interface - Show when there's an active session */}
+              {(uploadedFile && sessionId) && (
                 <>
                   {/* File Info Header */}
                   <div className={`p-6 border-b ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white/50'} backdrop-blur-sm`}>
@@ -1236,6 +1336,37 @@ What would you like to know about this document?`,
               )}
             </button>
 
+            {/* Chat History Button */}
+            <button
+              onClick={() => setShowSessionList(!showSessionList)}
+              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+                showSessionList
+                  ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-xl shadow-indigo-500/25'
+                  : darkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/50 hover:text-white' 
+                    : 'text-gray-600 hover:bg-white/50 hover:text-gray-800'
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                showSessionList
+                  ? 'bg-white/20'
+                  : 'bg-gray-100 group-hover:bg-indigo-100'
+              }`}>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div className="flex-1 text-left">
+                <span className="font-bold text-lg">Chat History</span>
+                <p className={`text-xs ${showSessionList ? 'text-white/80' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {chatSessions.length} sessions
+                </p>
+              </div>
+              {showSessionList && (
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              )}
+            </button>
+
             <button
               onClick={() => setActiveSection('meetings')}
               className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
@@ -1266,6 +1397,66 @@ What would you like to know about this document?`,
               )}
             </button>
           </nav>
+
+          {/* Chat Sessions List */}
+          {showSessionList && (
+            <div className="mt-6 space-y-3">
+              <div className={`p-4 rounded-2xl ${darkMode ? 'bg-gray-700/50' : 'bg-white/50'} backdrop-blur-sm border ${darkMode ? 'border-gray-600' : 'border-white/20'}`}>
+                <h3 className={`font-bold text-lg mb-3 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                  Recent Chats
+                </h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {chatSessions.length === 0 ? (
+                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>
+                      No chat sessions yet
+                    </p>
+                  ) : (
+                    chatSessions.map((session) => (
+                      <div
+                        key={session.sessionId}
+                        className={`p-3 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 ${
+                          session.sessionId === sessionId
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                            : darkMode
+                              ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                              : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                        }`}
+                        onClick={() => loadChatSession(session.sessionId)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-medium text-sm truncate ${
+                              session.sessionId === sessionId ? 'text-white' : darkMode ? 'text-white' : 'text-gray-800'
+                            }`}>
+                              {session.title}
+                            </p>
+                            <p className={`text-xs mt-1 ${
+                              session.sessionId === sessionId ? 'text-purple-100' : darkMode ? 'text-gray-400' : 'text-gray-500'
+                            }`}>
+                              {new Date(session.lastUpdated).toLocaleDateString()} • {session.chatMessages.length} messages
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteChatSession(session.sessionId);
+                            }}
+                            className={`ml-2 p-1 rounded-full hover:bg-red-500 hover:text-white transition-colors duration-200 ${
+                              session.sessionId === sessionId ? 'text-purple-200 hover:bg-red-400' : 'text-gray-400'
+                            }`}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Logout Section */}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
