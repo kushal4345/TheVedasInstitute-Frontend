@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
-import vedasLogo from '@/assets/vedas logo.jpg';
+import vedasLogo from '@/assets/vedas-logo.jpg';
 
 const VedasLogo = () => (
   <div className="flex items-center space-x-3">
@@ -67,7 +67,18 @@ const Signup = () => {
       
       navigate('/dashboard');
     } catch (error) {
-      setError('Failed to create account. Please try again.');
+      console.error('Signup error:', error);
+      if (error.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Please sign in instead.');
+      } else if (error.code === 'auth/invalid-email') {
+        setError('Invalid email address format.');
+      } else if (error.code === 'auth/weak-password') {
+        setError('Password is too weak. Please choose a stronger password (at least 6 characters).');
+      } else if (error.code === 'auth/operation-not-allowed') {
+        setError('Email/password sign up is not enabled. Please contact support.');
+      } else {
+        setError(`Account creation failed: ${error.message}`);
+      }
     }
     setLoading(false);
   };

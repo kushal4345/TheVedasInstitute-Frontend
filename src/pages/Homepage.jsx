@@ -7,7 +7,7 @@ import {
   Globe, Code, Zap, Video, MessageCircle, FileText, BarChart3,
   MapPin, Phone, Mail, Clock
 } from 'lucide-react';
-import vedasLogo from '@/assets/vedas logo.jpg';
+import vedasLogo from '@/assets/vedas-logo.jpg';
 import { useState, useEffect } from 'react';
 
 const VedasLogo = () => (

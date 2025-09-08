@@ -27,11 +27,13 @@ export const AuthProvider = ({ children }) => {
 
   // Sign up with email and password
   const signup = (email, password) => {
+    console.log('Attempting signup with:', { email, password });
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
   // Sign in with email and password
   const login = (email, password) => {
+    console.log('Attempting login with:', { email, password });
     return signInWithEmailAndPassword(auth, email, password);
   };
 
