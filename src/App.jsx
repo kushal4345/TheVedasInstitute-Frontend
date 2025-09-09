@@ -37,6 +37,9 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            
+            {/* Catch-all route for 404 handling */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </AuthProvider>

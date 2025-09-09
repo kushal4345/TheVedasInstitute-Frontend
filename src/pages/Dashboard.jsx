@@ -33,12 +33,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     setIsLoaded(true);
+    
+    // Mobile debugging
+    console.log('Dashboard mounted on:', {
+      userAgent: navigator.userAgent,
+      isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent),
+      currentUser: currentUser?.email,
+      pathname: window.location.pathname
+    });
+    
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [currentUser]);
 
   // Load chat sessions on component mount and when user changes
   useEffect(() => {
