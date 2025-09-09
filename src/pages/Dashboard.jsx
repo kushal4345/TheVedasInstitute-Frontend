@@ -300,28 +300,232 @@ const Dashboard = () => {
         // Generate sessionId BEFORE making the API call
         const newSessionId = generateSessionId();
         
+        // Try different request body formats
         const formData = new FormData();
         formData.append('session_id', newSessionId);
         formData.append('file', file);
         
-        // Try proxy first, then fallback to direct URL
-        let response;
+        // Alternative FormData formats
+        const formDataAlt1 = new FormData();
+        formDataAlt1.append('sessionId', newSessionId);
+        formDataAlt1.append('file', file);
+        
+        const formDataAlt2 = new FormData();
+        formDataAlt2.append('session', newSessionId);
+        formDataAlt2.append('document', file);
+        
+        const formDataAlt3 = new FormData();
+        formDataAlt3.append('id', newSessionId);
+        formDataAlt3.append('pdf', file);
+        
+        // Additional FormData formats for 500 error debugging
+        const formDataAlt4 = new FormData();
+        formDataAlt4.append('session_id', newSessionId);
+        formDataAlt4.append('pdf_file', file);
+        
+        const formDataAlt5 = new FormData();
+        formDataAlt5.append('session_id', newSessionId);
+        formDataAlt5.append('document', file);
+        
+        const formDataAlt6 = new FormData();
+        formDataAlt6.append('session_id', newSessionId);
+        formDataAlt6.append('upload', file);
+        
+        const formDataAlt7 = new FormData();
+        formDataAlt7.append('session_id', newSessionId);
+        formDataAlt7.append('data', file);
+        
+        // JSON format alternatives (some backends expect JSON)
+        const jsonBody1 = {
+          session_id: newSessionId,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type
+        };
+        
+        const jsonBody2 = {
+          sessionId: newSessionId,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type
+        };
+        
+        const requestBodies = [
+          { data: formData, name: 'session_id + file', isJson: false },
+          { data: formDataAlt1, name: 'sessionId + file', isJson: false },
+          { data: formDataAlt2, name: 'session + document', isJson: false },
+          { data: formDataAlt3, name: 'id + pdf', isJson: false },
+          { data: formDataAlt4, name: 'session_id + pdf_file', isJson: false },
+          { data: formDataAlt5, name: 'session_id + document', isJson: false },
+          { data: formDataAlt6, name: 'session_id + upload', isJson: false },
+          { data: formDataAlt7, name: 'session_id + data', isJson: false },
+          { data: JSON.stringify(jsonBody1), name: 'JSON: session_id + file_info', isJson: true },
+          { data: JSON.stringify(jsonBody2), name: 'JSON: sessionId + file_info', isJson: true }
+        ];
+        
+        // Use environment variable for API URL with fallback
+        const API_URL = import.meta.env.VITE_API_URL || 'https://vedas-chat-1.onrender.com';
+        console.log('API_URL:', API_URL);
+        
+        // First, test backend connectivity
+        console.log('🔍 Testing backend connectivity...');
         try {
-          response = await fetch('/vedas-api/upload_pdf/', {
-            method: 'POST',
-            body: formData,
-          });
-        } catch (proxyError) {
-          console.warn('Proxy failed, trying direct URL:', proxyError);
-          response = await fetch('https://vedas-chat-1.onrender.com/upload_pdf/', {
-            method: 'POST',
-            body: formData,
-            mode: 'cors',
-          });
+          const healthCheck = await fetch(`${API_URL}/`, { method: 'GET' });
+          if (healthCheck.ok) {
+            const healthData = await healthCheck.json();
+            console.log('✅ Backend is accessible:', healthData);
+          } else {
+            console.log('⚠️ Backend responded but not OK:', healthCheck.status);
+          }
+        } catch (error) {
+          console.log('❌ Backend connectivity test failed:', error.message);
         }
         
+        // Try different possible endpoints - more comprehensive list
+        let response;
+        const possibleEndpoints = [
+          // Common API patterns
+          '/vedas-api/upload_pdf/',
+          '/vedas-api/upload/',
+          '/vedas-api/pdf/upload/',
+          '/vedas-api/api/upload_pdf/',
+          '/vedas-api/upload-pdf/',
+          '/vedas-api/pdf/',
+          '/vedas-api/files/upload/',
+          '/vedas-api/documents/upload/',
+          '/vedas-api/v1/upload/',
+          '/vedas-api/v1/upload_pdf/',
+          // Direct API patterns
+          `${API_URL}/upload_pdf/`,
+          `${API_URL}/upload/`,
+          `${API_URL}/pdf/upload/`,
+          `${API_URL}/api/upload_pdf/`,
+          `${API_URL}/upload-pdf/`,
+          `${API_URL}/pdf/`,
+          `${API_URL}/files/upload/`,
+          `${API_URL}/documents/upload/`,
+          `${API_URL}/api/v1/upload_pdf/`,
+          `${API_URL}/api/v1/upload/`,
+          `${API_URL}/api/upload/`,
+          `${API_URL}/v1/upload/`,
+          `${API_URL}/v1/upload_pdf/`,
+          `${API_URL}/upload_pdf`,
+          `${API_URL}/upload`,
+          `${API_URL}/pdf/upload`,
+          `${API_URL}/api/upload_pdf`,
+          // Additional patterns
+          `${API_URL}/api/files/upload/`,
+          `${API_URL}/api/documents/upload/`,
+          `${API_URL}/files/upload/`,
+          `${API_URL}/documents/upload/`,
+          `${API_URL}/upload-file/`,
+          `${API_URL}/file-upload/`,
+          `${API_URL}/document-upload/`
+        ];
+        
+        let lastError = null;
+        let successfulEndpoint = null;
+        
+        // Try all combinations of endpoints, methods, and request bodies
+        let foundWorkingCombination = false;
+        
+        for (const endpoint of possibleEndpoints) {
+          if (foundWorkingCombination) break;
+          
+          try {
+            console.log('Trying endpoint:', endpoint);
+            
+            // First try OPTIONS to see if endpoint exists
+            try {
+              const optionsResponse = await fetch(endpoint, { 
+                method: 'OPTIONS',
+                mode: endpoint.startsWith('http') ? 'cors' : 'same-origin'
+              });
+              console.log(`OPTIONS ${endpoint}:`, optionsResponse.status);
+            } catch (optionsError) {
+              console.log(`OPTIONS ${endpoint} failed:`, optionsError.message);
+            }
+            
+            // Try different HTTP methods and request body formats
+            const methods = ['POST', 'PUT', 'PATCH'];
+            
+            for (const method of methods) {
+              if (foundWorkingCombination) break;
+              
+              for (const requestBody of requestBodies) {
+                if (foundWorkingCombination) break;
+                
+                try {
+                  console.log(`Trying ${method} ${endpoint} with ${requestBody.name}`);
+                  
+                  const fetchOptions = {
+                    method: method,
+                    body: requestBody.data,
+                  };
+                  
+                  // Add CORS mode for direct URLs
+                  if (endpoint.startsWith('http')) {
+                    fetchOptions.mode = 'cors';
+                  }
+                  
+                  // Set appropriate headers based on request type
+                  if (requestBody.isJson) {
+                    fetchOptions.headers = {
+                      'Content-Type': 'application/json',
+                    };
+                  }
+                  // Don't set Content-Type for FormData - let browser set it with boundary
+                  // Some backends are sensitive to this
+                  
+                  response = await fetch(endpoint, fetchOptions);
+        
         if (response.ok) {
+                    console.log(`✅ Success with ${method} ${endpoint} using ${requestBody.name}!`);
+                    successfulEndpoint = endpoint;
+                    foundWorkingCombination = true;
+                    break;
+                  } else {
+                    console.log(`❌ ${method} ${endpoint} with ${requestBody.name} failed:`, response.status);
+                    
+                    // Get detailed error response for debugging
+                    try {
+                      const errorText = await response.text();
+                      console.log(`Error details for ${method} ${endpoint} with ${requestBody.name}:`, errorText);
+                      
+                      // If it's a 500 error, try to parse as JSON for more details
+                      if (response.status === 500) {
+                        try {
+                          const errorJson = JSON.parse(errorText);
+                          console.log(`500 Error JSON:`, errorJson);
+                        } catch (parseError) {
+                          console.log(`500 Error is not JSON, raw text:`, errorText.substring(0, 200));
+                        }
+                      }
+                    } catch (textError) {
+                      console.log(`Could not read error response:`, textError.message);
+                    }
+                  }
+                } catch (methodError) {
+                  console.log(`❌ ${method} ${endpoint} with ${requestBody.name} error:`, methodError.message);
+                }
+              }
+            }
+            
+            // If no combination worked for this endpoint, record the last error
+            if (!foundWorkingCombination) {
+              const errorText = await response?.text().catch(() => 'No error text');
+              console.log('Error response:', errorText);
+              lastError = new Error(`Upload failed with status: ${response?.status || 'unknown'} - ${errorText}`);
+            }
+          } catch (error) {
+            console.log(`❌ Endpoint ${endpoint} error:`, error.message);
+            lastError = error;
+          }
+        }
+        
+        if (foundWorkingCombination && response && response.ok) {
           const result = await response.json();
+          console.log('🎉 Upload successful! Working endpoint:', successfulEndpoint);
           setSessionId(newSessionId);
           const uploadedFileData = {
           name: file.name,
@@ -364,7 +568,10 @@ What would you like to know about this document?`,
           
           saveChatSession(sessionData);
         } else {
-          throw new Error(`Upload failed with status: ${response.status}`);
+          // If no combination worked, provide helpful error message
+          const errorMessage = lastError ? lastError.message : 'No working API endpoint found';
+          console.error('❌ All endpoint/method/body combinations failed. Last error:', errorMessage);
+          throw new Error(`Upload failed: ${errorMessage}. Please check if the backend server is running and the API endpoints are correct.`);
         }
       } catch (error) {
         console.error('Upload error:', error);
@@ -404,35 +611,71 @@ What would you like to know about this document?`,
         
         console.log('Sending chat request:', requestBody);
         
-        // Try proxy first, then fallback to direct URL
+        // Use environment variable for API URL with fallback
+        const API_URL = import.meta.env.VITE_API_URL || 'https://vedas-chat-1.onrender.com';
+        console.log('API_URL:', API_URL);
+        
+        // Try different possible chat endpoints
         let response;
-        try {
-          response = await fetch('/vedas-api/chat/', {
+        const chatEndpoints = [
+          '/vedas-api/chat/',
+          '/vedas-api/api/chat/',
+          '/vedas-api/chat',
+          '/vedas-api/api/chat',
+          `${API_URL}/chat/`,
+          `${API_URL}/api/chat/`,
+          `${API_URL}/chat`,
+          `${API_URL}/api/chat`,
+          `${API_URL}/api/v1/chat/`,
+          `${API_URL}/api/v1/chat`
+        ];
+        
+        let lastChatError = null;
+        let successfulChatEndpoint = null;
+        
+        for (const endpoint of chatEndpoints) {
+          try {
+            console.log('Trying chat endpoint:', endpoint);
+            
+            const fetchOptions = {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify(requestBody),
-          });
-        } catch (proxyError) {
-          console.warn('Proxy failed, trying direct URL:', proxyError);
-          response = await fetch('https://vedas-chat-1.onrender.com/chat/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestBody),
-            mode: 'cors',
-          });
+            };
+            
+            // Add CORS mode for direct URLs
+            if (endpoint.startsWith('http')) {
+              fetchOptions.mode = 'cors';
+            }
+            
+            response = await fetch(endpoint, fetchOptions);
+            
+            if (response.ok) {
+              console.log('✅ Chat success with endpoint:', endpoint);
+              successfulChatEndpoint = endpoint;
+              break;
+            } else {
+              console.log(`❌ Chat endpoint ${endpoint} failed with status:`, response.status);
+              const errorText = await response.text().catch(() => 'No error text');
+              console.log('Chat error response:', errorText);
+              lastChatError = new Error(`Chat request failed with status: ${response.status} - ${errorText}`);
+            }
+          } catch (error) {
+            console.log(`❌ Chat endpoint ${endpoint} error:`, error.message);
+            lastChatError = error;
+          }
         }
         
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('API Error Response:', errorText);
-          throw new Error(`Chat request failed with status: ${response.status} - ${errorText}`);
+        if (!response || !response.ok) {
+          const errorMessage = lastChatError ? lastChatError.message : 'No working chat endpoint found';
+          console.error('❌ All chat endpoints failed. Last error:', errorMessage);
+          throw new Error(`Chat failed: ${errorMessage}. Please check if the backend server is running and the API endpoints are correct.`);
         }
         
         const result = await response.json();
+        console.log('🎉 Chat successful! Working endpoint:', successfulChatEndpoint);
         console.log('Chat response:', result);
         
         const aiMessage = result.response || result.message || result.answer || 'I received your message but couldn\'t generate a response.';
@@ -1816,4 +2059,5 @@ What would you like to know about this document?`,
 };
 
 export default Dashboard;
+
 
