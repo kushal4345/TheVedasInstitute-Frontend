@@ -951,26 +951,26 @@ const CourseDetail = () => {
                   {course.category}
                 </span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">{course.title}</h1>
-              <p className="text-xl lg:text-2xl text-gray-300 mb-8 leading-relaxed max-w-4xl">{course.description}</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">{course.title}</h1>
+              <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl text-gray-300 mb-6 sm:mb-8 leading-relaxed max-w-4xl">{course.description}</p>
 
-              <div className="flex flex-wrap items-center gap-6 mb-8">
-                <div className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-lg shadow-sm border border-gray-700">
-                  <span className="text-yellow-400 text-xl">★</span>
-                  <span className="font-bold text-lg text-white">{course.rating}</span>
-                  <span className="text-gray-400">({course.students} students)</span>
+              <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <div className="flex items-center gap-2 bg-gray-800/50 px-3 sm:px-4 py-2 rounded-lg shadow-sm border border-gray-700">
+                  <span className="text-yellow-400 text-lg sm:text-xl">★</span>
+                  <span className="font-bold text-sm sm:text-lg text-white">{course.rating}</span>
+                  <span className="text-gray-400 text-xs sm:text-sm">({course.students} students)</span>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-400">
+                <div className="flex items-center gap-4 text-xs sm:text-sm text-gray-400">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">📚</span>
+                    <span className="text-lg sm:text-2xl">📚</span>
                     <span>{course.lessons} lessons</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">⏱️</span>
+                    <span className="text-lg sm:text-2xl">⏱️</span>
                     <span>{course.duration}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">📊</span>
+                    <span className="text-lg sm:text-2xl">📊</span>
                     <span>{course.level}</span>
                   </div>
                 </div>
@@ -1047,12 +1047,12 @@ const CourseDetail = () => {
                 {activeTab === 'overview' && (
                   <div className="space-y-8">
                     <div>
-                      <h3 className="text-2xl font-semibold mb-6 text-white">What you'll learn</h3>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-4 sm:mb-6 text-white">What you'll learn</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {course.whatYouWillLearn.map((item, index) => (
                           <div key={index} className="flex items-start gap-3 p-3 bg-gray-800/30 rounded-lg border border-gray-700">
                             <span className="text-green-400 mt-1 text-lg">✓</span>
-                            <span className="text-gray-300">{item}</span>
+                            <span className="text-gray-300 text-xs sm:text-sm lg:text-base">{item}</span>
                           </div>
                         ))}
                       </div>
@@ -1061,10 +1061,10 @@ const CourseDetail = () => {
                     <Separator className="bg-gray-700" />
 
                     <div>
-                      <h3 className="text-2xl font-semibold mb-6 text-white">Requirements</h3>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-4 sm:mb-6 text-white">Requirements</h3>
                       <ul className="space-y-3">
                         {course.requirements.map((req, index) => (
-                          <li key={index} className="flex items-start gap-3 text-gray-300">
+                          <li key={index} className="flex items-start gap-3 text-gray-300 text-xs sm:text-sm lg:text-base">
                             <span className="text-orange-400 mt-1">•</span>
                             <span>{req}</span>
                           </li>
@@ -1075,8 +1075,8 @@ const CourseDetail = () => {
                     <Separator className="bg-gray-700" />
 
                     <div>
-                      <h3 className="text-2xl font-semibold mb-6 text-white">Description</h3>
-                      <p className="text-gray-300 leading-relaxed text-lg">{course.longDescription}</p>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-4 sm:mb-6 text-white">Description</h3>
+                      <p className="text-gray-300 leading-relaxed text-sm sm:text-base lg:text-lg">{course.longDescription}</p>
                     </div>
                   </div>
                 )}

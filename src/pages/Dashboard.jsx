@@ -3,9 +3,11 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('main');
   const [userPhoto, setUserPhoto] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -19,7 +21,13 @@ const Dashboard = () => {
   const [sessionId, setSessionId] = useState(null);
   const [typingMessage, setTypingMessage] = useState('');
   const [chatSessions, setChatSessions] = useState([]);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showSessionList, setShowSessionList] = useState(false);
+
+  // Generate unique session ID
+  const generateSessionId = () => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
   const fileInputRef = useRef(null);
   const ragFileInputRef = useRef(null);
 
@@ -32,14 +40,15 @@ const Dashboard = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Load chat sessions on component mount
+  // Load chat sessions on component mount and when user changes
   useEffect(() => {
     loadChatSessions();
-  }, []);
+  }, [currentUser]);
 
-  // Generate a unique session ID
-  const generateSessionId = () => {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // Close mobile sidebar when navigating
+  const handleNavigation = (section) => {
+    setActiveSection(section);
+    setShowMobileSidebar(false);
   };
 
   // Simulate typing animation for AI responses
@@ -86,7 +95,7 @@ const Dashboard = () => {
         
         // Determine heading level based on content
         const isMainHeading = headingText.includes(':') || headingText.length > 20;
-        const headingSize = isMainHeading ? 'text-lg' : 'text-base';
+        const headingSize = isMainHeading ? 'text-sm sm:text-base lg:text-lg' : 'text-xs sm:text-sm lg:text-base';
         const headingWeight = isMainHeading ? 'font-semibold' : 'font-medium';
         
         return (
@@ -114,7 +123,7 @@ const Dashboard = () => {
             <div className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${
               darkMode ? 'bg-gray-400' : 'bg-gray-600'
             }`}></div>
-            <span className={`text-sm leading-7 font-normal ${
+            <span className={`text-sm sm:text-base lg:text-lg leading-5 sm:leading-6 lg:leading-7 font-normal ${
               darkMode ? 'text-gray-200' : 'text-gray-800'
             }`} style={{
               fontFeatureSettings: '"liga" 1, "kern" 1',
@@ -147,7 +156,7 @@ const Dashboard = () => {
             }}>
               {number}
             </div>
-            <span className={`text-sm leading-7 font-normal ${
+            <span className={`text-sm sm:text-base lg:text-lg leading-5 sm:leading-6 lg:leading-7 font-normal ${
               darkMode ? 'text-gray-200' : 'text-gray-800'
             }`} style={{
               fontFeatureSettings: '"liga" 1, "kern" 1',
@@ -164,7 +173,7 @@ const Dashboard = () => {
       // Regular text lines with Claude's amazing typography
       if (trimmedLine) {
         return (
-          <p key={index} className={`text-sm leading-7 font-normal my-2 ${
+          <p key={index} className={`text-sm sm:text-base lg:text-lg leading-5 sm:leading-6 lg:leading-7 font-normal my-1 sm:my-2 ${
             darkMode ? 'text-gray-200' : 'text-gray-800'
           }`} style={{
             fontFeatureSettings: '"liga" 1, "kern" 1',
@@ -185,7 +194,9 @@ const Dashboard = () => {
   // Chat Session Management Functions
   const saveChatSession = (sessionData) => {
     try {
-      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const userId = currentUser?.uid || 'anonymous';
+      const storageKey = `vedasChatSessions_${userId}`;
+      const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const existingIndex = sessions.findIndex(s => s.sessionId === sessionData.sessionId);
       
       if (existingIndex >= 0) {
@@ -197,7 +208,7 @@ const Dashboard = () => {
       // Sort by last updated (most recent first)
       sessions.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
       
-      localStorage.setItem('vedasChatSessions', JSON.stringify(sessions));
+      localStorage.setItem(storageKey, JSON.stringify(sessions));
       setChatSessions(sessions);
     } catch (error) {
       console.error('Failed to save chat session:', error);
@@ -206,7 +217,9 @@ const Dashboard = () => {
 
   const loadChatSessions = () => {
     try {
-      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const userId = currentUser?.uid || 'anonymous';
+      const storageKey = `vedasChatSessions_${userId}`;
+      const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
       setChatSessions(sessions);
       return sessions;
     } catch (error) {
@@ -217,7 +230,9 @@ const Dashboard = () => {
 
   const loadChatSession = (sessionIdToLoad) => {
     try {
-      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const userId = currentUser?.uid || 'anonymous';
+      const storageKey = `vedasChatSessions_${userId}`;
+      const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const session = sessions.find(s => s.sessionId === sessionIdToLoad);
       
       if (session) {
@@ -226,6 +241,7 @@ const Dashboard = () => {
         setChatMessages(session.chatMessages);
         setActiveSection('rag');
         setShowSessionList(false); // Close the session list
+        setShowMobileSidebar(false); // Close mobile sidebar
         return true;
       }
       return false;
@@ -237,9 +253,11 @@ const Dashboard = () => {
 
   const deleteChatSession = (sessionIdToDelete) => {
     try {
-      const sessions = JSON.parse(localStorage.getItem('vedasChatSessions') || '[]');
+      const userId = currentUser?.uid || 'anonymous';
+      const storageKey = `vedasChatSessions_${userId}`;
+      const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]');
       const filteredSessions = sessions.filter(s => s.sessionId !== sessionIdToDelete);
-      localStorage.setItem('vedasChatSessions', JSON.stringify(filteredSessions));
+      localStorage.setItem(storageKey, JSON.stringify(filteredSessions));
       setChatSessions(filteredSessions);
       
       // If we're deleting the current session, reset to main dashboard
@@ -533,23 +551,23 @@ What would you like to know about this document?`,
               </div>
 
               {/* Glassmorphism Card */}
-              <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8 shadow-2xl">
-                <div className="flex items-center justify-between">
+              <div className="relative backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl lg:rounded-3xl p-4 lg:p-8 shadow-2xl">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                   <div className="space-y-4">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                       <div className="relative">
-                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
-                          <span className="text-2xl">🧘‍♂️</span>
+                        <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-2xl animate-pulse">
+                          <span className="text-lg lg:text-2xl">🧘‍♂️</span>
                         </div>
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-400 rounded-full flex items-center justify-center animate-bounce">
+                        <div className="absolute -top-1 -right-1 lg:-top-2 lg:-right-2 w-4 h-4 lg:w-6 lg:h-6 bg-green-400 rounded-full flex items-center justify-center animate-bounce">
                           <span className="text-xs">✨</span>
                         </div>
                       </div>
                       <div>
-                        <h1 className="text-5xl font-black text-white mb-2 bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 bg-clip-text text-transparent">
+                        <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white mb-2 bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 bg-clip-text text-transparent">
                           Namaste, {currentUser?.email?.split('@')[0]}! 🙏
                         </h1>
-                        <p className="text-xl text-white/90 font-medium">
+                        <p className="text-base lg:text-xl text-white/90 font-medium">
                           Embark on your sacred journey through timeless wisdom
                         </p>
                       </div>
@@ -640,7 +658,7 @@ What would you like to know about this document?`,
                       </svg>
                     </div>
                     <div className="text-right">
-                      <div className="text-3xl font-black">8</div>
+                      <div className="text-3xl font-black">{chatSessions.length}</div>
                       <div className="text-sm opacity-80">Sessions</div>
                     </div>
                   </div>
@@ -768,7 +786,7 @@ What would you like to know about this document?`,
                   </div>
                   
                   <Button 
-                    onClick={() => setActiveSection('meetings')}
+                    onClick={() => handleNavigation('meetings')}
                     className="w-full mt-6 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-black py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg border border-white/20 hover:border-white/40"
                   >
                     <span className="flex items-center justify-center space-x-2">
@@ -846,7 +864,7 @@ What would you like to know about this document?`,
                     style={{ animationDelay: `${index * 200}ms` }}
                   >
                     {/* 3D Card Effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl transform group-hover:scale-105 group-hover:-rotate-1 transition-all duration-700 border border-gray-100"></div>
+                    <div className={`absolute inset-0 ${darkMode ? 'bg-gradient-to-br from-gray-800 to-gray-900' : 'bg-gradient-to-br from-white to-gray-50'} rounded-3xl shadow-2xl transform group-hover:scale-105 group-hover:-rotate-1 transition-all duration-700 border ${darkMode ? 'border-gray-700' : 'border-gray-100'}`}></div>
                     <div className={`absolute inset-0 bg-gradient-to-br ${course.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl`}></div>
                     
                     <div className="relative p-0 rounded-3xl overflow-hidden">
@@ -929,22 +947,22 @@ What would you like to know about this document?`,
         return (
           <div className={`h-[calc(100vh-120px)] flex flex-col transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-6">
               <div>
-                <h2 className={`text-4xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent`}>
+                <h2 className={`text-xl sm:text-2xl lg:text-4xl font-black bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 bg-clip-text text-transparent`}>
                   AI Wisdom Chat
                 </h2>
-                <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-2`}>
+                <p className={`text-sm sm:text-base lg:text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'} mt-1 sm:mt-2`}>
                   {uploadedFile ? `Chatting about: ${uploadedFile.name}` : 'Upload documents and chat with ancient wisdom'}
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 {uploadedFile && (
                   <Button 
                     onClick={startNewChat}
-                    className={`bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300`}
+                    className={`bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-3 py-2 sm:px-4 sm:py-2 lg:px-6 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm lg:text-base`}
                   >
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     Upload New Document
@@ -963,7 +981,7 @@ What would you like to know about this document?`,
             </div>
             
             {/* Main Chat Interface */}
-            <div className={`flex-1 rounded-3xl shadow-2xl border flex flex-col overflow-hidden ${
+            <div className={`h-[90vh] rounded-3xl shadow-2xl border flex flex-col overflow-hidden ${
               darkMode 
                 ? 'bg-gray-800 border-gray-700' 
                 : 'bg-white/80 backdrop-blur-xl border-white/20'
@@ -989,10 +1007,10 @@ What would you like to know about this document?`,
                       </div>
                     </div>
                     
-                    <h3 className={`text-3xl font-black mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                    <h3 className={`text-2xl lg:text-3xl font-black mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
                       Upload Your Sacred Document
                     </h3>
-                    <p className={`text-lg mb-8 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <p className={`text-base lg:text-lg mb-6 lg:mb-8 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       Upload a PDF document to begin your journey through ancient wisdom
                     </p>
                     
@@ -1008,7 +1026,7 @@ What would you like to know about this document?`,
                       <Button 
                         onClick={() => ragFileInputRef.current?.click()}
                         disabled={isUploading}
-                        className={`bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white font-black px-12 py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-lg ${
+                        className={`bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 hover:from-purple-600 hover:via-pink-600 hover:to-red-600 text-white font-black px-8 lg:px-12 py-3 lg:py-4 rounded-xl lg:rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 text-base lg:text-lg ${
                           isUploading ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                       >
@@ -1069,13 +1087,13 @@ What would you like to know about this document?`,
                   </div>
                   
                   {/* Chat Messages */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                  <div className="h-[calc(100vh-140px)] sm:h-[calc(100vh-160px)] lg:h-[85vh] overflow-y-auto p-2 sm:p-4 lg:p-6 space-y-2 sm:space-y-3 lg:space-y-4">
                     {chatMessages.map((message) => (
                       <div key={message.id} className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-3xl ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
-                          <div className={`flex items-start space-x-3 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                        <div className={`w-full max-w-[90%] sm:max-w-[80%] lg:max-w-3xl ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                          <div className={`flex items-start space-x-2 sm:space-x-3 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                             {/* Avatar */}
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                            <div className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center shadow-lg ${
                               message.type === 'user' 
                                 ? 'bg-gradient-to-br from-blue-500 to-indigo-600' 
                                 : 'bg-gradient-to-br from-purple-500 to-pink-600'
@@ -1105,7 +1123,7 @@ What would you like to know about this document?`,
                             </div>
                             
                             {/* Message Bubble */}
-                            <div className={`px-6 py-4 rounded-2xl shadow-lg relative group ${
+                            <div className={`px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl shadow-lg relative group ${
                               message.type === 'user'
                                 ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white'
                                 : darkMode 
@@ -1228,7 +1246,7 @@ What would you like to know about this document?`,
                               ) : (
                                 /* User Message Content */
                                 <div>
-                              <p className="text-sm leading-7 font-normal" style={{
+                              <p className="text-sm sm:text-base lg:text-lg leading-5 sm:leading-6 lg:leading-7 font-normal break-words" style={{
                                 fontFeatureSettings: '"liga" 1, "kern" 1',
                                 textRendering: 'optimizeLegibility',
                                 WebkitFontSmoothing: 'antialiased',
@@ -1341,8 +1359,8 @@ What would you like to know about this document?`,
                   </div>
                   
                   {/* Message Input */}
-                  <div className={`p-6 border-t ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white/50'} backdrop-blur-sm`}>
-                    <div className="flex items-center space-x-4">
+                  <div className={`p-2 sm:p-3 lg:p-6 border-t ${darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-white/50'} backdrop-blur-sm`}>
+                    <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
                       <div className="flex-1 relative">
                         <input
                           type="text"
@@ -1350,7 +1368,7 @@ What would you like to know about this document?`,
                           onChange={(e) => setCurrentMessage(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                           placeholder="Ask a question about your document..."
-                          className={`w-full px-6 py-4 rounded-2xl border-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 ${
+                          className={`w-full px-3 py-2 sm:px-4 sm:py-3 lg:px-6 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 text-sm sm:text-base lg:text-base ${
                             darkMode 
                               ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                               : 'bg-white border-gray-200 text-gray-800 placeholder-gray-500'
@@ -1360,7 +1378,7 @@ What would you like to know about this document?`,
                       <Button 
                         onClick={handleSendMessage}
                         disabled={!currentMessage.trim() || isChatLoading}
-                        className={`px-8 py-4 rounded-2xl font-bold transition-all duration-300 ${
+                        className={`px-3 py-2 sm:px-4 sm:py-3 lg:px-8 lg:py-4 rounded-lg sm:rounded-xl lg:rounded-2xl font-bold transition-all duration-300 ${
                           currentMessage.trim() && !isChatLoading
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl'
                             : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -1386,7 +1404,7 @@ What would you like to know about this document?`,
         return (
           <div className="h-[calc(100vh-120px)] flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-black text-gray-800">Meetings</h2>
+              <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-gray-800'}`}>Meetings</h2>
               <Button 
                 onClick={handleBackToDashboard}
                 className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold px-6 py-2 rounded-xl"
@@ -1395,15 +1413,17 @@ What would you like to know about this document?`,
               </Button>
             </div>
             
-            <div className="flex-1 bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+            <div className={`flex-1 ${darkMode ? 'bg-gray-800/50' : 'bg-white/50'} backdrop-blur-xl rounded-2xl shadow-lg border ${
+              darkMode ? 'border-gray-700' : 'border-gray-200'
+            } p-8`}>
               <div className="text-center">
                 <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">No meetings scheduled</h3>
-                <p className="text-gray-600 mb-6">Schedule your first meeting to start collaborating</p>
+                <h3 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>No meetings scheduled</h3>
+                <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>Schedule your first meeting to start collaborating</p>
                 <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold px-8 py-3 rounded-xl">
                   Schedule Meeting
                 </Button>
@@ -1418,9 +1438,45 @@ What would you like to know about this document?`,
   };
 
   return (
-    <div className={`min-h-screen flex transition-all duration-1000 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
+    <div className={`min-h-screen w-full flex transition-all duration-1000 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
+      {/* Mobile Header */}
+      <div className={`lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 border-b ${
+        darkMode ? 'border-gray-700 bg-gray-800/95' : 'border-gray-200 bg-white/95'
+      } backdrop-blur-xl`}>
+        <div className="flex items-center space-x-3">
+          <div className={`w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center`}>
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </div>
+          <h1 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+            The Vedas Institute
+          </h1>
+        </div>
+        <button
+          onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+          className={`p-2 rounded-lg touch-manipulation ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div 
+          className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50"
+          onClick={() => setShowMobileSidebar(false)}
+        ></div>
+      )}
+
       {/* Futuristic Sidebar */}
-      <div className={`w-72 shadow-2xl border-r transition-all duration-1000 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white/80 backdrop-blur-xl border-white/20'}`}>
+      <div className={`w-72 shadow-2xl border-r transition-all duration-1000 ${
+        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      } ${
+        showMobileSidebar ? 'fixed inset-y-0 left-0 z-50 lg:relative lg:inset-auto' : 'hidden lg:block'
+      }`}>
         <div className="p-6">
           {/* Logo Section */}
           <div className="flex items-center space-x-3 mb-8">
@@ -1464,7 +1520,7 @@ What would you like to know about this document?`,
               <div className={`w-12 h-6 rounded-full transition-all duration-300 ${
                 darkMode ? 'bg-blue-500' : 'bg-gray-300'
               }`}>
-                <div className={`w-5 h-5 bg-white rounded-full shadow-lg transition-all duration-300 ${
+                <div className={`w-5 h-5 bg-gray-600 rounded-full shadow-lg transition-all duration-300 ${
                   darkMode ? 'translate-x-6' : 'translate-x-0.5'
                 }`}></div>
               </div>
@@ -1474,9 +1530,9 @@ What would you like to know about this document?`,
           {/* Profile Section */}
           <div className="mb-8">
             <div className={`p-4 rounded-2xl transition-all duration-300 ${
-              darkMode ? 'bg-gray-700/50' : 'bg-white/50'
+              darkMode ? 'bg-gray-700/50' : 'bg-gray-700/50'
             } backdrop-blur-sm border ${
-              darkMode ? 'border-gray-600' : 'border-white/20'
+              darkMode ? 'border-gray-600' : 'border-gray-600'
             }`}>
               <div className="flex items-center space-x-3 mb-4">
                 <div className="relative">
@@ -1534,18 +1590,18 @@ What would you like to know about this document?`,
           {/* Futuristic Navigation */}
           <nav className="space-y-3">
             <button
-              onClick={() => setActiveSection('main')}
-              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+              onClick={() => handleNavigation('main')}
+              className={`w-full flex items-center space-x-4 px-4 py-4 lg:py-4 rounded-2xl transition-all duration-300 group touch-manipulation ${
                 activeSection === 'main'
                   ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25'
                   : darkMode 
                     ? 'text-gray-300 hover:bg-gray-700/50 hover:text-white' 
-                    : 'text-gray-600 hover:bg-white/50 hover:text-gray-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 activeSection === 'main'
-                  ? 'bg-white/20'
+                  ? 'bg-gray-700/50'
                   : 'bg-gray-100 group-hover:bg-blue-100'
               }`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1559,23 +1615,23 @@ What would you like to know about this document?`,
                 </p>
               </div>
               {activeSection === 'main' && (
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
               )}
             </button>
 
             <button
-              onClick={() => setActiveSection('rag')}
-              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+              onClick={() => handleNavigation('rag')}
+              className={`w-full flex items-center space-x-4 px-4 py-4 lg:py-4 rounded-2xl transition-all duration-300 group touch-manipulation ${
                 activeSection === 'rag'
                   ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-xl shadow-purple-500/25'
                   : darkMode 
                     ? 'text-gray-300 hover:bg-gray-700/50 hover:text-white' 
-                    : 'text-gray-600 hover:bg-white/50 hover:text-gray-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 activeSection === 'rag'
-                  ? 'bg-white/20'
+                  ? 'bg-gray-700/50'
                   : 'bg-gray-100 group-hover:bg-purple-100'
               }`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1589,24 +1645,27 @@ What would you like to know about this document?`,
                 </p>
               </div>
               {activeSection === 'rag' && (
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
               )}
             </button>
 
             {/* Chat History Button */}
             <button
-              onClick={() => setShowSessionList(!showSessionList)}
-              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+              onClick={() => {
+                setShowSessionList(!showSessionList);
+                setShowMobileSidebar(false);
+              }}
+              className={`w-full flex items-center space-x-4 px-4 py-4 lg:py-4 rounded-2xl transition-all duration-300 group touch-manipulation ${
                 showSessionList
                   ? 'bg-gradient-to-r from-indigo-500 to-blue-600 text-white shadow-xl shadow-indigo-500/25'
                   : darkMode 
                     ? 'text-gray-300 hover:bg-gray-700/50 hover:text-white' 
-                    : 'text-gray-600 hover:bg-white/50 hover:text-gray-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 showSessionList
-                  ? 'bg-white/20'
+                  ? 'bg-gray-700/50'
                   : 'bg-gray-100 group-hover:bg-indigo-100'
               }`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1620,23 +1679,23 @@ What would you like to know about this document?`,
                 </p>
               </div>
               {showSessionList && (
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
               )}
             </button>
 
             <button
-              onClick={() => setActiveSection('meetings')}
-              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+              onClick={() => handleNavigation('meetings')}
+              className={`w-full flex items-center space-x-4 px-4 py-4 lg:py-4 rounded-2xl transition-all duration-300 group touch-manipulation ${
                 activeSection === 'meetings'
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xl shadow-emerald-500/25'
                   : darkMode 
                     ? 'text-gray-300 hover:bg-gray-700/50 hover:text-white' 
-                    : 'text-gray-600 hover:bg-white/50 hover:text-gray-800'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
               }`}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ${
                 activeSection === 'meetings'
-                  ? 'bg-white/20'
+                  ? 'bg-gray-700/50'
                   : 'bg-gray-100 group-hover:bg-emerald-100'
               }`}>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1650,7 +1709,7 @@ What would you like to know about this document?`,
                 </p>
               </div>
               {activeSection === 'meetings' && (
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
               )}
             </button>
           </nav>
@@ -1671,7 +1730,7 @@ What would you like to know about this document?`,
                     chatSessions.map((session) => (
                       <div
                         key={session.sessionId}
-                        className={`p-3 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 ${
+                        className={`p-3 rounded-xl cursor-pointer transition-all duration-200 hover:scale-105 touch-manipulation ${
                           session.sessionId === sessionId
                             ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
                             : darkMode
@@ -1716,10 +1775,10 @@ What would you like to know about this document?`,
           )}
 
           {/* Logout Section */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="mt-8 pt-6 border-t border-gray-700">
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center space-x-4 px-4 py-4 rounded-2xl transition-all duration-300 group ${
+              className={`w-full flex items-center space-x-4 px-4 py-4 lg:py-4 rounded-2xl transition-all duration-300 group touch-manipulation ${
                 darkMode 
                   ? 'text-gray-400 hover:bg-red-500/20 hover:text-red-400' 
                   : 'text-gray-500 hover:bg-red-50 hover:text-red-600'
@@ -1746,8 +1805,9 @@ What would you like to know about this document?`,
       </div>
 
       {/* Main Content */}
-      <div className="flex-1">
-        <div className="p-8">
+      {/* Main Content Area */}
+      <div className={`flex-1 lg:ml-0 ml-0 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50'}`}>
+        <div className="p-2 lg:p-2 pt-16 lg:pt-2 min-h-screen">
           {renderMainContent()}
         </div>
       </div>

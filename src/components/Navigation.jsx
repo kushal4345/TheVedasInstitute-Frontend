@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import vedasLogo from '../assets/vedas-logo.jpg';
 
 const Navigation = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Courses', path: '/courses' },
     { name: 'About', path: '/about' },
+    { name: 'Admission', path: '/admission' },
     { name: 'Contact', path: '/contact' }
   ];
 
@@ -89,15 +91,50 @@ const Navigation = () => {
             </Button>
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden relative p-2.5 rounded-xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 group">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden relative p-2.5 rounded-xl bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 hover:border-indigo-500/50 transition-all duration-300 group"
+            >
               <div className="w-5 h-5 flex flex-col justify-center items-center space-y-1">
-                <span className="w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-indigo-400"></span>
-                <span className="w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-purple-400"></span>
-                <span className="w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-pink-400"></span>
+                <span className={`w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-indigo-400 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+                <span className={`w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-purple-400 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
+                <span className={`w-4 h-0.5 bg-white rounded-full transition-all duration-300 group-hover:bg-pink-400 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
               </div>
             </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-2xl border-t border-gray-800/30 shadow-2xl z-50">
+            <div className="px-4 py-6 space-y-4">
+              {navItems.map((item) => (
+                <Link 
+                  key={item.name} 
+                  to={item.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-xl transition-all duration-300 font-medium ${
+                    location.pathname === item.path 
+                      ? 'text-white bg-gradient-to-r from-indigo-500/20 to-purple-500/20' 
+                      : 'text-gray-300 hover:text-white hover:bg-gradient-to-r hover:from-indigo-500/10 hover:to-purple-500/10'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* Mobile Join Now Button */}
+              <div className="pt-4 border-t border-gray-800/30">
+                <Button asChild className="w-full group relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-indigo-500/30 border-0">
+                  <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                    <span className="relative z-10">Join Now</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

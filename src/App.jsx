@@ -7,6 +7,9 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
+import About from './pages/About';
+import Admission from './pages/Admission';
+import Contact from './pages/Contact';
 import './App.css';
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/course/:id" element={<CourseDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/admission" element={<Admission />} />
+          <Route path="/contact" element={<Contact />} />
             
             {/* Protected Routes */}
             <Route 

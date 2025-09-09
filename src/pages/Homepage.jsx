@@ -93,8 +93,8 @@ const Homepage = () => {
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
         
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-16 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-8 sm:py-16 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-16 items-center">
             
             <div className="space-y-6 sm:space-y-8">
               <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 backdrop-blur-sm animate-pulse">
@@ -102,8 +102,8 @@ const Homepage = () => {
                 <span className="text-xs sm:text-sm font-medium text-gray-300">Leading CBSE Coaching Institute</span>
               </div>
               
-              <div className="space-y-4 sm:space-y-6">
-                <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold leading-tight">
+              <div className="space-y-2 sm:space-y-4 lg:space-y-6">
+                <h1 className="text-xl sm:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight">
                   <span className="text-white">Transform Your</span>
                   <br />
                   <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
@@ -111,23 +111,23 @@ const Homepage = () => {
                   </span>
                 </h1>
                 
-                <p className="text-lg sm:text-xl text-gray-300 leading-relaxed max-w-lg">
+                <p className="text-xs sm:text-base lg:text-lg xl:text-xl text-gray-300 leading-relaxed max-w-lg">
                   Experience excellence in CBSE education with our comprehensive coaching programs designed for students from foundation to 12th grade.
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-500 transform hover:scale-105 shadow-2xl hover:shadow-indigo-500/30 border-0">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
+                <Button asChild size="lg" className="group relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-3 sm:px-5 lg:px-7 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl font-semibold text-xs sm:text-sm lg:text-base transition-all duration-500 transform hover:scale-105 shadow-2xl hover:shadow-indigo-500/30 border-0">
                   <Link to="/signup">
                     <span className="relative z-10">Start Your Journey</span>
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </Link>
                 </Button>
                 
-                <Button variant="outline" size="lg" className="group relative overflow-hidden border-2 border-gray-600 text-white hover:border-transparent px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg transition-all duration-500 transform hover:scale-105 shadow-2xl bg-transparent">
-                  <Play className="mr-2 h-4 w-4 sm:h-5 sm:w-5 group-hover:scale-110 transition-transform duration-300" />
+                <Button variant="outline" size="lg" className="group relative overflow-hidden border-2 border-gray-600 text-white hover:border-transparent px-3 sm:px-5 lg:px-7 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl font-semibold text-xs sm:text-sm lg:text-base transition-all duration-500 transform hover:scale-105 shadow-2xl bg-transparent">
+                  <Play className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 group-hover:scale-110 transition-transform duration-300" />
                   <span>Watch Success Stories</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-gray-800 to-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg sm:rounded-xl lg:rounded-2xl"></div>
                 </Button>
               </div>
             </div>
@@ -135,8 +135,8 @@ const Homepage = () => {
             <div className="relative">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                <div className="relative bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-gray-700/50">
-                  <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="relative bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-xl rounded-xl sm:rounded-2xl lg:rounded-3xl p-3 sm:p-5 lg:p-7 border border-gray-700/50">
+                  <div className="flex items-center justify-between mb-2 sm:mb-4 lg:mb-6">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full animate-pulse"></div>
                       <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 rounded-full animate-pulse delay-300"></div>
@@ -145,26 +145,26 @@ const Homepage = () => {
                     <span className="text-gray-400 text-xs sm:text-sm font-mono">learning.js</span>
                   </div>
                   
-                  <div className="space-y-2 sm:space-y-3">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <span className="text-purple-400 text-xs sm:text-sm font-mono">const</span>
-                      <span className="text-blue-400 text-xs sm:text-sm font-mono">student</span>
-                      <span className="text-gray-400 text-xs sm:text-sm font-mono">=</span>
-                      <span className="text-green-400 text-xs sm:text-sm font-mono">new</span>
-                      <span className="text-yellow-400 text-xs sm:text-sm font-mono">Student</span>
-                      <span className="text-gray-400 text-xs sm:text-sm font-mono">();</span>
+                  <div className="space-y-1 sm:space-y-1.5 lg:space-y-2">
+                    <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2">
+                      <span className="text-purple-400 text-xs sm:text-sm lg:text-sm font-mono">const</span>
+                      <span className="text-blue-400 text-xs sm:text-sm lg:text-sm font-mono">student</span>
+                      <span className="text-gray-400 text-xs sm:text-sm lg:text-sm font-mono">=</span>
+                      <span className="text-green-400 text-xs sm:text-sm lg:text-sm font-mono">new</span>
+                      <span className="text-yellow-400 text-xs sm:text-sm lg:text-sm font-mono">Student</span>
+                      <span className="text-gray-400 text-xs sm:text-sm lg:text-sm font-mono">();</span>
                     </div>
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <span className="text-purple-400 text-xs sm:text-sm font-mono">student</span>
-                      <span className="text-gray-400 text-xs sm:text-sm font-mono">.</span>
-                      <span className="text-blue-400 text-xs sm:text-sm font-mono">enroll</span>
-                      <span className="text-gray-400 text-xs sm:text-sm font-mono">(</span>
-                      <span className="text-green-400 text-xs sm:text-sm font-mono">'CBSE'</span>
-                      <span className="text-gray-400 text-xs sm:text-sm font-mono">);</span>
+                    <div className="flex items-center space-x-1 sm:space-x-1.5 lg:space-x-2">
+                      <span className="text-purple-400 text-xs sm:text-sm lg:text-sm font-mono">student</span>
+                      <span className="text-gray-400 text-xs sm:text-sm lg:text-sm font-mono">.</span>
+                      <span className="text-blue-400 text-xs sm:text-sm lg:text-sm font-mono">enroll</span>
+                      <span className="text-gray-400 text-xs sm:text-sm lg:text-sm font-mono">(</span>
+                      <span className="text-green-400 text-xs sm:text-sm lg:text-sm font-mono">'CBSE'</span>
+                      <span className="text-gray-400 text-xs sm:text-sm lg:text-sm font-mono">);</span>
                     </div>
                   </div>
                   
-                  <div className="mt-4 sm:mt-6 space-y-2">
+                  <div className="mt-2 sm:mt-4 lg:mt-6 space-y-1 sm:space-y-2">
                     <div className="flex justify-between text-xs text-gray-400">
                       <span>Progress</span>
                       <span>95%</span>
@@ -181,10 +181,10 @@ const Homepage = () => {
       </section>
 
       {/* Features Section */}
-      <section className="relative py-20 sm:py-32 bg-gradient-to-br from-gray-900 via-black to-gray-900 overflow-hidden">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16 sm:mb-20">
-            <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
+      <section className="relative py-12 sm:py-20 lg:py-32 bg-gradient-to-br from-gray-900 via-black to-gray-900 overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-xl sm:text-2xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 lg:mb-6">
               <span className="text-white">Excellence in</span>
               <br />
               <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent animate-pulse">
@@ -196,15 +196,15 @@ const Homepage = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-7">
             <div className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-6 sm:p-8 hover:border-indigo-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-indigo-500/20">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500 animate-pulse">
-                  <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-3 sm:p-5 lg:p-7 hover:border-indigo-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-indigo-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform duration-500 animate-pulse">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 lg:h-7 lg:w-7 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Comprehensive Curriculum</h3>
-                <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 lg:mb-3">Comprehensive Curriculum</h3>
+                <p className="text-gray-300 leading-relaxed text-xs sm:text-sm lg:text-base">
                   From foundation to 12th grade, our CBSE programs cover all subjects with detailed study materials.
                 </p>
               </Card>
@@ -212,12 +212,12 @@ const Homepage = () => {
 
             <div className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-6 sm:p-8 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-purple-500/20">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500 animate-pulse delay-300">
-                  <Users className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-3 sm:p-5 lg:p-7 hover:border-purple-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-purple-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform duration-500 animate-pulse delay-300">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 lg:h-7 lg:w-7 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Expert Teachers</h3>
-                <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 lg:mb-3">Expert Teachers</h3>
+                <p className="text-gray-300 leading-relaxed text-xs sm:text-sm lg:text-base">
                   Learn from experienced CBSE educators with years of teaching experience.
                 </p>
               </Card>
@@ -225,12 +225,12 @@ const Homepage = () => {
 
             <div className="group relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-6 sm:p-8 hover:border-blue-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-blue-500/20">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-500 animate-pulse delay-600">
-                  <Award className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              <Card className="relative bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-xl border-gray-700/50 p-3 sm:p-5 lg:p-7 hover:border-blue-500/50 transition-all duration-500 transform hover:scale-105 group-hover:shadow-2xl group-hover:shadow-blue-500/20">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-14 lg:h-14 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center mb-2 sm:mb-3 lg:mb-4 group-hover:scale-110 transition-transform duration-500 animate-pulse delay-600">
+                  <Award className="h-4 w-4 sm:h-5 sm:w-5 lg:h-7 lg:w-7 text-white" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">Proven Results</h3>
-                <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
+                <h3 className="text-sm sm:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 lg:mb-3">Proven Results</h3>
+                <p className="text-gray-300 leading-relaxed text-xs sm:text-sm lg:text-base">
                   Our students consistently achieve excellent results in CBSE board exams.
                 </p>
               </Card>

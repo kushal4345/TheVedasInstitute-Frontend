@@ -170,32 +170,32 @@ const Courses = () => {
                       </div>
 
                       {/* Course Title */}
-                      <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                      <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight">
                         {course.title}
                       </h1>
 
                       {/* Course Description */}
-                      <p className="text-xl lg:text-2xl text-gray-200 mb-8 max-w-3xl leading-relaxed">
+                      <p className="text-sm sm:text-lg lg:text-xl xl:text-2xl text-gray-200 mb-6 sm:mb-8 max-w-3xl leading-relaxed">
                         {course.description}
                       </p>
 
                       {/* Course Stats */}
-                      <div className="flex flex-wrap items-center gap-6 mb-8">
-                        <div className="flex items-center gap-2 bg-gray-800/50 px-4 py-2 rounded-lg shadow-sm border border-gray-700">
-                          <span className="text-yellow-400 text-xl">★</span>
-                          <span className="font-bold text-lg text-white">{course.rating}</span>
-                          <span className="text-gray-400">({course.students} students)</span>
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                        <div className="flex items-center gap-2 bg-gray-800/50 px-3 sm:px-4 py-2 rounded-lg shadow-sm border border-gray-700">
+                          <span className="text-yellow-400 text-lg sm:text-xl">★</span>
+                          <span className="font-bold text-sm sm:text-lg text-white">{course.rating}</span>
+                          <span className="text-gray-400 text-xs sm:text-sm">({course.students} students)</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <span className="text-2xl">⏱️</span>
+                        <div className="flex items-center gap-2 text-gray-300 text-xs sm:text-sm">
+                          <span className="text-lg sm:text-2xl">⏱️</span>
                           <span>{course.duration}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <span className="text-2xl">📊</span>
+                        <div className="flex items-center gap-2 text-gray-300 text-xs sm:text-sm">
+                          <span className="text-lg sm:text-2xl">📊</span>
                           <span>{course.level}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <span className="text-2xl">👨‍🏫</span>
+                        <div className="flex items-center gap-2 text-gray-300 text-xs sm:text-sm">
+                          <span className="text-lg sm:text-2xl">👨‍🏫</span>
                           <span>{course.instructor}</span>
                         </div>
                       </div>
@@ -341,10 +341,10 @@ const Courses = () => {
                     <span>👥 {course.students}</span>
                   </div>
                 </div>
-                <CardTitle className="text-xl group-hover:text-orange-400 transition-colors duration-300 leading-tight text-white">
+                <CardTitle className="text-lg sm:text-xl group-hover:text-orange-400 transition-colors duration-300 leading-tight text-white">
                   {course.title}
                 </CardTitle>
-                <CardDescription className="text-gray-300 line-clamp-2 mt-2 leading-relaxed">
+                <CardDescription className="text-gray-300 line-clamp-2 mt-2 leading-relaxed text-xs sm:text-sm">
                   {course.description}
                 </CardDescription>
               </CardHeader>
