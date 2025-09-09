@@ -299,7 +299,8 @@ const Dashboard = () => {
       try {
         // Check if API URL is configured
         if (!import.meta.env.VITE_API_URL) {
-          alert('Configuration error: API URL is not defined. Please contact support.');
+          console.error('VITE_API_URL is not defined:', import.meta.env);
+          alert('Configuration error: API URL is not defined. Please check environment variables.');
           return;
         }
         
@@ -405,7 +406,8 @@ What would you like to know about this document?`,
       try {
         // Check if API URL is configured
         if (!import.meta.env.VITE_API_URL) {
-          alert('Configuration error: API URL is not defined. Please contact support.');
+          console.error('VITE_API_URL is not defined:', import.meta.env);
+          alert('Configuration error: API URL is not defined. Please check environment variables.');
           return;
         }
         

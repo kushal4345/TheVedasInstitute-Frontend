@@ -17,6 +17,15 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined,
+      },
+    },
+  },
   server: {
     proxy: {
       '/vedas-api': {
